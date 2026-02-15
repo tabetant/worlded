@@ -9,8 +9,6 @@ WorldEd is a modern, full-stack educational platform that combines cutting-edge 
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-336791?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
 
-[Live Demo](#) • [Documentation](#) • [Report Bug](#) • [Request Feature](#)
-
 ---
 
 ## 🎯 Key Features
