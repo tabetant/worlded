@@ -12,6 +12,36 @@ const ALLOWED_ORIGINS = [
     'https://www.worlded.com',      // TODO: Replace with actual production domain
 ]
 
+// =============================================================================
+// Route Protection Configuration
+// Routes that do NOT require authentication
+// =============================================================================
+const PUBLIC_ROUTES = [
+    '/auth',                // Login / signup
+    '/reset-password',      // Password reset
+    '/',                    // Landing page (redirects based on auth state)
+]
+
+/** Check if a pathname matches any public route prefix */
+function isPublicRoute(pathname: string): boolean {
+    return PUBLIC_ROUTES.some(route =>
+        pathname === route || pathname.startsWith(`${route}/`)
+    )
+}
+
+/** Check if the pathname is a static asset or Next.js internal */
+function isStaticAsset(pathname: string): boolean {
+    return (
+        pathname.startsWith('/_next') ||
+        pathname.startsWith('/favicon') ||
+        pathname.includes('.')
+    )
+}
+
+// =============================================================================
+// Middleware
+// =============================================================================
+
 export async function middleware(request: NextRequest) {
     const origin = request.headers.get('origin')
     const isApiRoute = request.nextUrl.pathname.startsWith('/api')
@@ -34,11 +64,17 @@ export async function middleware(request: NextRequest) {
     // Block cross-origin API requests from unknown origins
     // -------------------------------------------------------------------------
     if (isApiRoute && origin && !ALLOWED_ORIGINS.includes(origin)) {
+        console.warn('[middleware] CORS violation:', {
+            origin,
+            path: request.nextUrl.pathname,
+            timestamp: new Date().toISOString(),
+        })
         return new NextResponse('CORS policy violation', { status: 403 })
     }
 
     // -------------------------------------------------------------------------
-    // Supabase Auth session handling (existing logic)
+    // Supabase Auth session handling
+    // Refreshes tokens automatically via @supabase/ssr
     // -------------------------------------------------------------------------
     let response = NextResponse.next({
         request: {
@@ -55,7 +91,7 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) =>
+                    cookiesToSet.forEach(({ name, value }) =>
                         request.cookies.set(name, value)
                     )
                     response = NextResponse.next({
@@ -69,15 +105,25 @@ export async function middleware(request: NextRequest) {
         }
     )
 
+    // Validate session server-side (uses getUser, NOT getSession)
     const {
         data: { user },
     } = await supabase.auth.getUser()
 
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith('/auth') &&
-        request.nextUrl.pathname.startsWith('/dashboard')
-    ) {
+    // -------------------------------------------------------------------------
+    // Route protection: redirect unauthenticated users to /auth
+    // -------------------------------------------------------------------------
+    const pathname = request.nextUrl.pathname
+
+    if (!user && !isPublicRoute(pathname) && !isApiRoute && !isStaticAsset(pathname)) {
+        // Log unauthenticated access attempt
+        if (process.env.NODE_ENV === 'development') {
+            console.log('[middleware] Unauthenticated access blocked:', {
+                path: pathname,
+                timestamp: new Date().toISOString(),
+            })
+        }
+
         const url = request.nextUrl.clone()
         url.pathname = '/auth'
         return NextResponse.redirect(url)
@@ -106,3 +152,4 @@ export const config = {
         '/((?!_next/static|_next/image|favicon.ico).*)',
     ],
 }
+

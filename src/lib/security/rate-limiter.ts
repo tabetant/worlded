@@ -15,14 +15,19 @@ const DEFAULT_CONFIG: RateLimitConfig = {
     windowMs: 60 * 60 * 1000, // 1 hour
 }
 
+export interface RateLimitResult {
+    allowed: boolean
+    remaining: number
+    resetAt: number // timestamp (ms) when the window resets
+}
+
 /**
  * Check if a request should be rate-limited.
- * Returns: { allowed, remaining, resetAt }
  */
 export function checkRateLimit(
     key: string,
     config: RateLimitConfig = DEFAULT_CONFIG
-): { allowed: boolean; remaining: number; resetAt: number } {
+): RateLimitResult {
     const now = Date.now()
     const record = store.get(key)
 

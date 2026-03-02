@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { tickets } from "@/app/db/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
+import { errorResponse } from "@/lib/errors/error-handler";
 
 export async function POST(req: Request) {
     try {
@@ -29,10 +30,8 @@ export async function POST(req: Request) {
         }).returning();
 
         return NextResponse.json({ message: 'Ticket created successfully', ticket: newTicket[0] }, { status: 201 });
-    } catch (error: unknown) {
-        console.error("Error creating ticket:", error);
-        const errorMessage = error instanceof Error ? error.message : "Failed to create ticket";
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+    } catch (error) {
+        return errorResponse(error, 500, 'tickets:POST');
     }
 }
 
@@ -55,7 +54,6 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ tickets: results }, { status: 200 });
     } catch (error) {
-        console.error("Error fetching tickets:", error);
-        return NextResponse.json({ error: "Failed to fetch tickets" }, { status: 500 });
+        return errorResponse(error, 500, 'tickets:GET');
     }
 }

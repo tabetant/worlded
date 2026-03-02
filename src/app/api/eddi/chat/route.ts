@@ -2,6 +2,7 @@ import { google } from '@ai-sdk/google';
 import { generateText, tool, stepCountIs } from 'ai';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { errorResponse } from '@/lib/errors/error-handler';
 import {
     find_module,
     get_modules_by_course,
@@ -340,20 +341,16 @@ export async function POST(req: Request) {
         });
 
     } catch (error: unknown) {
-        console.error("Eddi API Error:", error);
-
         const err = error as { status?: number; message?: string };
 
         if (err.status === 429 || err.message?.includes('429')) {
+            console.error('[eddi:chat] Rate limited by AI provider:', err.message);
             return NextResponse.json(
                 { text: "I'm a bit overwhelmed right now. Give me a moment and try again!" },
                 { status: 429 }
             );
         }
 
-        return NextResponse.json(
-            { text: "Something went wrong on my end. Please try again.", error: "Internal Server Error" },
-            { status: 500 }
-        );
+        return errorResponse(error, 500, 'eddi:chat');
     }
 }

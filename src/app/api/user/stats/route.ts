@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { getInProgressCourses } from '@/lib/progress/calculate-progress'
 import { getCurrentStreak } from '@/lib/progress/streak-tracker'
+import { errorResponse } from '@/lib/errors/error-handler'
 
 export async function GET() {
     try {
@@ -76,7 +77,6 @@ export async function GET() {
             isNewUser,
         })
     } catch (error) {
-        console.error('Stats API error:', error)
-        return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })
+        return errorResponse(error, 500, 'user:stats')
     }
 }
