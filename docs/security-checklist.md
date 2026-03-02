@@ -102,6 +102,9 @@
 - [ ] Set up database backups in Supabase
 - [ ] Configure rate limiting for production (consider Redis instead of in-memory)
 - [ ] Set up CSP (Content Security Policy) headers
+- [ ] Apply RLS policies from `docs/supabase-rls.md` to all tables
+- [ ] Configure email templates in Supabase Dashboard
+- [ ] Add password reset redirect URL in Supabase → Auth → URL Configuration
 
 ---
 
@@ -113,6 +116,8 @@
 - [ ] User is redirected to `/auth` when visiting protected routes
 - [ ] User stays logged in after page refresh (session persistence)
 - [ ] User is logged out after 7 days of inactivity (session timebox)
+- [ ] Token automatically refreshes on activity (check `TOKEN_REFRESHED` events)
+- [ ] User is logged out when both access and refresh tokens expire
 - [ ] Password reset flow works end-to-end
 
 ### CORS
@@ -182,6 +187,10 @@
 | `src/app/not-found.tsx` | 404 page (UI) |
 | `src/app/api/test/error/route.ts` | Error sanitization test (dev only) |
 | `src/lib/auth/session-config.md` | JWT/session configuration guide |
+| `src/lib/auth/supabase-jwt-config.md` | Step-by-step Supabase Dashboard JWT setup |
+| `src/lib/auth/token-refresh.md` | Token refresh documentation |
+| `src/lib/auth/session.ts` | Server-side session helpers |
 | `src/lib/auth/roles.md` | RBAC usage documentation |
 | `docs/security-checklist.md` | This file |
 | `docs/environment-setup.md` | Environment variable documentation |
+| `docs/supabase-rls.md` | Row Level Security policies and SQL |
