@@ -188,3 +188,39 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
         references: [courses.id],
     }),
 }));
+
+// ============================================================================
+// EDDI CONVERSATION MEMORY
+// Separate from mentor/student conversations — these persist Eddi chat history
+// ============================================================================
+
+export const eddiMessageRoleEnum = pgEnum('eddi_message_role', ['user', 'assistant']);
+
+export const eddiConversations = pgTable('eddi_conversations', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull(), // Supabase auth user ID
+    title: text('title').notNull().default('New conversation'),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const eddiMessages = pgTable('eddi_messages', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    conversationId: uuid('conversation_id').references(() => eddiConversations.id, { onDelete: 'cascade' }).notNull(),
+    role: eddiMessageRoleEnum('role').notNull(),
+    content: text('content').notNull(),
+    actionPayload: jsonb('action_payload'), // Store any tool results / navigation actions
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const eddiConversationsRelations = relations(eddiConversations, ({ many }) => ({
+    messages: many(eddiMessages),
+}));
+
+export const eddiMessagesRelations = relations(eddiMessages, ({ one }) => ({
+    conversation: one(eddiConversations, {
+        fields: [eddiMessages.conversationId],
+        references: [eddiConversations.id],
+    }),
+}));
+
