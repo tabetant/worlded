@@ -3,16 +3,23 @@
  * by validating URLs against an allowlist of paths and domains.
  */
 
-// Allowed internal path prefixes
+// Allowed internal path prefixes (add new routes here as they are created)
 const ALLOWED_PATH_PREFIXES = [
     '/',
-    '/courses',
+    '/courses',        // includes /courses/[id]
+    '/modules',        // includes /modules/[id]
+    '/quizzes',        // includes /quizzes/[id]
     '/dashboard',
     '/auth',
     '/profile',
     '/settings',
     '/support',
     '/resources',
+    '/progress',
+    '/questions',
+    '/ticketsubmission',
+    '/admin',
+    '/reset-password',
 ]
 
 // Allowed domains for absolute URL redirects

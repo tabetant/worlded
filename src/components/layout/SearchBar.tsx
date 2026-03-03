@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, BookOpen, FileText, X, Command } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { safeRedirect } from "@/lib/security/redirect-validator";
 
 interface SearchResult {
     type: "course" | "module";
@@ -102,7 +103,7 @@ export function SearchBar() {
         setResults([]);
         setIsOpen(false);
         setSelectedIndex(-1);
-        router.push(result.href);
+        router.push(safeRedirect(result.href));
     };
 
     const showDropdown = isOpen && (query.length >= 2 || results.length > 0);
@@ -184,8 +185,8 @@ export function SearchBar() {
                                                         onClick={() => navigateTo(result)}
                                                         onMouseEnter={() => setSelectedIndex(idx)}
                                                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${selectedIndex === idx
-                                                                ? "bg-primary/5"
-                                                                : "hover:bg-muted/50"
+                                                            ? "bg-primary/5"
+                                                            : "hover:bg-muted/50"
                                                             }`}
                                                     >
                                                         <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -220,8 +221,8 @@ export function SearchBar() {
                                                         onClick={() => navigateTo(result)}
                                                         onMouseEnter={() => setSelectedIndex(idx)}
                                                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${selectedIndex === idx
-                                                                ? "bg-primary/5"
-                                                                : "hover:bg-muted/50"
+                                                            ? "bg-primary/5"
+                                                            : "hover:bg-muted/50"
                                                             }`}
                                                     >
                                                         <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">

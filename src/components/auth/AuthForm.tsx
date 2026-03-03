@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { useForm } from "react-hook-form"
+import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { motion, AnimatePresence } from "framer-motion"
@@ -9,6 +10,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import { Loader2, Mic } from "lucide-react"
+import { safeRedirect } from "@/lib/security/redirect-validator"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -69,7 +71,7 @@ export default function AuthForm() {
             toast.success("Welcome back!", {
                 description: "Successfully logged in to WorldEd.",
             })
-            router.push("/dashboard")
+            router.push(safeRedirect("/dashboard"))
             router.refresh()
         } catch (error) {
             toast.error("Something went wrong", {
@@ -105,7 +107,7 @@ export default function AuthForm() {
                 description: "Please check your email to verify your account.",
             })
             // Check if email confirmation is required, otherwise redirect
-            router.push("/dashboard")
+            router.push(safeRedirect("/dashboard"))
             router.refresh()
         } catch (error) {
             toast.error("Something went wrong", {
@@ -176,6 +178,14 @@ export default function AuthForm() {
                                             {loginForm.formState.errors.password && (
                                                 <p className="text-xs text-red-500">{loginForm.formState.errors.password.message}</p>
                                             )}
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <Link
+                                                href="/reset-password"
+                                                className="text-xs text-muted-foreground hover:text-[var(--worlded-blue)] transition-colors"
+                                            >
+                                                Forgot password?
+                                            </Link>
                                         </div>
                                     </CardContent>
                                     <CardFooter className="flex flex-col gap-4">

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Globe, Bell, User, Sparkles, Menu, X } from 'lucide-react';
+import { Globe, Bell, User, Sparkles, Menu, X, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EddiChat } from '@/components/dashboard/EddiChat';
 import { SearchBar } from '@/components/layout/SearchBar';
@@ -11,9 +11,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface AppShellProps {
     children: React.ReactNode;
+    /** Pass true from server layout when the current user is an admin */
+    isAdmin?: boolean;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, isAdmin: isAdminUser = false }: AppShellProps) {
     const [isEddiOpen, setIsEddiOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const pathname = usePathname();
@@ -26,6 +28,11 @@ export function AppShell({ children }: AppShellProps) {
         { id: 'courses', label: 'Courses', href: '/courses' },
         { id: 'progress', label: 'My Progress', href: '/progress' },
         { id: 'resources', label: 'Resources', href: '/resources' },
+        // Conditionally include admin link
+        ...(isAdminUser
+            ? [{ id: 'admin', label: 'Admin', href: '/admin' }]
+            : []
+        ),
     ];
 
     const isActive = (href: string) => {
@@ -65,13 +72,16 @@ export function AppShell({ children }: AppShellProps) {
                                     key={item.id}
                                     href={item.href}
                                     className={`
-                    text-sm font-medium transition-colors pb-1
-                    ${isActive(item.href)
-                                            ? 'text-primary border-b-2 border-primary'
-                                            : 'text-muted-foreground hover:text-foreground'
+                    text-sm font-medium transition-colors pb-1 flex items-center gap-1
+                    ${item.id === 'admin'
+                                            ? (isActive(item.href) ? 'text-red-600 border-b-2 border-red-500' : 'text-red-500/70 hover:text-red-600')
+                                            : (isActive(item.href)
+                                                ? 'text-primary border-b-2 border-primary'
+                                                : 'text-muted-foreground hover:text-foreground')
                                         }
                   `}
                                 >
+                                    {item.id === 'admin' && <Shield size={14} />}
                                     {item.label}
                                 </Link>
                             ))}

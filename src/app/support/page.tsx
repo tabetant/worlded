@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { safeRedirect } from "@/lib/security/redirect-validator";
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import {
@@ -65,7 +66,7 @@ function SupportContent() {
             const { data: { session } } = await createClient().auth.getSession();
             if (!session) {
                 setError('You must be logged in to access this page.');
-                router.push('/auth');
+                router.push(safeRedirect('/auth'));
             }
         }
         checkLoggedIn();

@@ -16,6 +16,7 @@ import {
 } from "../ui/Select";
 import { Ticket } from '../support/page';
 import { useRouter } from "next/navigation";
+import { safeRedirect } from "@/lib/security/redirect-validator";
 
 export default function TicketSubmissionForm() {
     const router = useRouter();
@@ -28,7 +29,7 @@ export default function TicketSubmissionForm() {
         const checkLoggedIn = async () => {
             const { data: { session } } = await supabase().auth.getSession();
             if (!session) {
-                router.push('/auth');
+                router.push(safeRedirect('/auth'));
             } else {
                 setEmail(session.user.email as string);
                 setFirstName(session.user.user_metadata.first_name as string);

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { supabase } from "../db/client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { safeRedirect } from "@/lib/security/redirect-validator";
 
 export default function LoginForm() {
     const router = useRouter();
@@ -32,7 +33,7 @@ export default function LoginForm() {
             console.error("Error logging in:", loginError);
             return;
         }
-        router.push('/dashboard');
+        router.push(safeRedirect('/dashboard'));
     };
 
     return (

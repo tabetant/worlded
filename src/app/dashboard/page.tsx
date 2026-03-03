@@ -2,6 +2,7 @@
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from 'react'
+import { safeRedirect } from '@/lib/security/redirect-validator';
 import { StudentView } from '@/components/dashboard/StudentView';
 import { MentorDashboard } from '@/components/dashboard/MentorDashboard';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ export default function DashboardPage() {
             const supabase = createClient();
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                router.push('/auth');
+                router.push(safeRedirect('/auth'));
             } else {
                 // Extract user's first name from metadata or email
                 const user = session.user;

@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { safeRedirect } from "@/lib/security/redirect-validator";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -10,9 +11,9 @@ export default function LandingPage() {
     const checkSession = async () => {
       const { data: { session } } = await createClient().auth.getSession();
       if (session) {
-        router.push('/dashboard');
+        router.push(safeRedirect('/dashboard'));
       } else {
-        router.push('/auth');
+        router.push(safeRedirect('/auth'));
       }
     };
     checkSession();
