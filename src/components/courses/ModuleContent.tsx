@@ -20,6 +20,139 @@ import {
 import { ModuleCompletionToggle } from "./ModuleCompletionToggle";
 import { saveQuizScore } from "@/app/actions/quiz";
 
+// ---------------------------------------------------------------------------
+// Module-specific quiz feedback
+// ---------------------------------------------------------------------------
+type FeedbackEntry = { correct: string; incorrect: string };
+
+const MODULE_FEEDBACK: Record<string, FeedbackEntry> = {
+    limits: {
+        correct: "Great job! You understand how to evaluate limits. Keep practicing with different types of limit problems.",
+        incorrect: "Not quite. Remember: for limits, check if direct substitution works first. If you get 0/0, try factoring or rationalization.",
+    },
+    derivatives: {
+        correct: "Excellent! You've mastered the derivative rules. Practice combining them with more complex functions.",
+        incorrect: "Review the power rule: d/dx(xⁿ) = nxⁿ⁻¹. For products, use (fg)′ = f′g + fg′. Don't forget the chain rule when needed!",
+    },
+    optimization: {
+        correct: "Perfect! You know how to find maximum and minimum values. Try more word problems to build intuition.",
+        incorrect: "Remember the optimization process: 1) Define variables 2) Write constraint equation 3) Find derivative 4) Set to zero 5) Verify max/min.",
+    },
+    integration: {
+        correct: "Outstanding! You understand integration fundamentals. The Fundamental Theorem connects derivatives and integrals beautifully.",
+        incorrect: "Review: Integration is the reverse of differentiation. ∫xⁿ dx = xⁿ⁺¹/(n+1) + C. Don't forget the constant of integration!",
+    },
+    vectors: {
+        correct: "Great work! You understand the core properties of vectors. Try visualizing them geometrically for deeper intuition.",
+        incorrect: "Review: a vector has both magnitude and direction. Vector addition is done component-wise; scalar multiplication scales the length.",
+    },
+    gaussian: {
+        correct: "Excellent! You've got Gaussian Elimination down. Try applying it to larger systems for more practice.",
+        incorrect: "Review: the goal is Row Echelon Form. Use row operations to create zeros below each pivot, then back-substitute.",
+    },
+    matrix: {
+        correct: "Great job! You understand matrix operations. Remember: AB ≠ BA in general — multiplication is not commutative.",
+        incorrect: "Review: to multiply A (m×n) by B (n×p), the inner dimensions must match. The result is m×p. Addition requires equal dimensions.",
+    },
+    eigen: {
+        correct: "Outstanding! Eigenvectors and eigenvalues are key to many advanced applications. Well done.",
+        incorrect: "Review: Av = λv. An eigenvector only gets scaled (not rotated). Solve det(A − λI) = 0 to find eigenvalues first.",
+    },
+};
+
+function getQuizFeedback(moduleTitle: string, isCorrect: boolean): string {
+    const t = moduleTitle.toLowerCase();
+    let entry: FeedbackEntry | undefined;
+    if (t.includes("limit") || t.includes("continuity")) entry = MODULE_FEEDBACK.limits;
+    else if (t.includes("power") || t.includes("product") || t.includes("rule")) entry = MODULE_FEEDBACK.derivatives;
+    else if (t.includes("optim")) entry = MODULE_FEEDBACK.optimization;
+    else if (t.includes("integr")) entry = MODULE_FEEDBACK.integration;
+    else if (t.includes("vector")) entry = MODULE_FEEDBACK.vectors;
+    else if (t.includes("gaussian") || t.includes("elimination")) entry = MODULE_FEEDBACK.gaussian;
+    else if (t.includes("matrix") || t.includes("matrices")) entry = MODULE_FEEDBACK.matrix;
+    else if (t.includes("eigen")) entry = MODULE_FEEDBACK.eigen;
+    return isCorrect
+        ? (entry?.correct ?? "Correct! Well done.")
+        : (entry?.incorrect ?? "Not quite — review the material and try again.");
+}
+
+// ---------------------------------------------------------------------------
+// Module-specific key concepts (shown in sidebar)
+// ---------------------------------------------------------------------------
+type Concept = { term: string; definition: string };
+
+const MODULE_CONCEPTS: Record<string, Concept[]> = {
+    limits: [
+        { term: "One-sided limits", definition: "The limit of a function as x approaches a value from one direction (left or right) only." },
+        { term: "Infinite limits", definition: "Limits where the function grows without bound as x approaches a point — indicating a vertical asymptote." },
+        { term: "Continuity", definition: "A function is continuous at c if: f(c) is defined, the limit exists, and the limit equals f(c)." },
+        { term: "Squeeze theorem", definition: "If g(x) ≤ f(x) ≤ h(x) and lim g = lim h = L, then lim f = L." },
+        { term: "Discontinuity", definition: "A point where continuity fails: removable (hole), jump, or infinite (asymptote)." },
+    ],
+    derivatives: [
+        { term: "Power rule", definition: "d/dx(xⁿ) = nxⁿ⁻¹. The exponent comes down and decreases by one." },
+        { term: "Product rule", definition: "(fg)′ = f′g + fg′. 'Left d-Right plus Right d-Left'." },
+        { term: "Quotient rule", definition: "(f/g)′ = (f′g − fg′) / g². 'Lo d-Hi minus Hi d-Lo over Lo squared'." },
+        { term: "Chain rule", definition: "d/dx[f(g(x))] = f′(g(x)) · g′(x). Derivative of outer × derivative of inner." },
+        { term: "Higher-order derivatives", definition: "Applying differentiation repeatedly: f′′ is the second derivative, f′′′ the third, etc." },
+    ],
+    optimization: [
+        { term: "Critical points", definition: "Points where f′(x) = 0 or f′(x) is undefined — candidates for local max or min." },
+        { term: "First derivative test", definition: "If f′ changes from + to − at c, it's a local max. If − to +, it's a local min." },
+        { term: "Second derivative test", definition: "If f′(c) = 0 and f′′(c) < 0, local max. If f′′(c) > 0, local min." },
+        { term: "Absolute extrema", definition: "The global maximum or minimum of a function over a closed interval [a, b]." },
+        { term: "Related rates", definition: "Using implicit differentiation to relate the rates of change of two or more quantities." },
+    ],
+    integration: [
+        { term: "Antiderivative", definition: "A function F such that F′ = f. Integration finds antiderivatives." },
+        { term: "Indefinite integral", definition: "∫f(x) dx = F(x) + C, where C is the constant of integration." },
+        { term: "Definite integral", definition: "∫ₐᵇ f(x) dx gives the net signed area between f and the x-axis from a to b." },
+        { term: "FTC", definition: "Fundamental Theorem of Calculus: ∫ₐᵇ f(x) dx = F(b) − F(a) if F is an antiderivative of f." },
+        { term: "Area under curve", definition: "A definite integral computes the net area between the curve and the x-axis." },
+    ],
+    vectors: [
+        { term: "Magnitude", definition: "The length of a vector, computed as √(x² + y²) in ℝ²." },
+        { term: "Scalar multiplication", definition: "Multiplying a vector by a number scales its length without changing direction (unless negative)." },
+        { term: "Dot product", definition: "a · b = |a||b|cos θ. Measures how aligned two vectors are; zero means perpendicular." },
+        { term: "Unit vector", definition: "A vector of length 1, obtained by dividing a vector by its magnitude." },
+        { term: "Span", definition: "The set of all vectors reachable by linear combinations of a given set of vectors." },
+    ],
+    gaussian: [
+        { term: "Pivot", definition: "The leading non-zero entry in a row; used to eliminate values below it." },
+        { term: "Row Echelon Form", definition: "An upper-triangular matrix form with pivots moving right as rows go down." },
+        { term: "RREF", definition: "Reduced Row Echelon Form: each pivot is 1 and the only non-zero entry in its column." },
+        { term: "Back substitution", definition: "Solving for variables from the bottom equation up once REF is achieved." },
+        { term: "Augmented matrix", definition: "The coefficient matrix extended with the constants column [A|b]." },
+    ],
+    matrix: [
+        { term: "Matrix multiplication", definition: "(AB)ᵢⱼ = Σ AᵢₖBₖⱼ. Inner dimensions must match; result is m×p for (m×n)(n×p)." },
+        { term: "Transpose", definition: "Aᵀ flips A across its diagonal: rows become columns." },
+        { term: "Identity matrix", definition: "The matrix I where AI = IA = A. Diagonal of 1s, rest 0s." },
+        { term: "Inverse", definition: "A⁻¹ satisfies AA⁻¹ = I. Only square matrices with non-zero determinants are invertible." },
+        { term: "Determinant", definition: "A scalar det(A) indicating if a matrix is invertible (non-zero) and how it scales area/volume." },
+    ],
+    eigen: [
+        { term: "Eigenvector", definition: "A non-zero vector v such that Av = λv — it only gets scaled, never rotated." },
+        { term: "Eigenvalue", definition: "The scalar λ in Av = λv; represents the scaling factor applied to an eigenvector." },
+        { term: "Characteristic equation", definition: "det(A − λI) = 0. Solving this gives the eigenvalues of A." },
+        { term: "Diagonalization", definition: "Writing A = PDP⁻¹ where D is diagonal with eigenvalues, P has eigenvectors as columns." },
+        { term: "Linear Transformation", definition: "A function between vector spaces preserving addition and scalar multiplication." },
+    ],
+};
+
+function getKeyConcepts(moduleTitle: string): Concept[] {
+    const t = moduleTitle.toLowerCase();
+    if (t.includes("limit") || t.includes("continuity")) return MODULE_CONCEPTS.limits;
+    if (t.includes("power") || t.includes("product") || t.includes("rule")) return MODULE_CONCEPTS.derivatives;
+    if (t.includes("optim")) return MODULE_CONCEPTS.optimization;
+    if (t.includes("integr")) return MODULE_CONCEPTS.integration;
+    if (t.includes("vector")) return MODULE_CONCEPTS.vectors;
+    if (t.includes("gaussian") || t.includes("elimination")) return MODULE_CONCEPTS.gaussian;
+    if (t.includes("matrix") || t.includes("matrices")) return MODULE_CONCEPTS.matrix;
+    if (t.includes("eigen")) return MODULE_CONCEPTS.eigen;
+    return [];
+}
+
 type QuizQuestion = {
     question: string;
     options: string[];
@@ -117,7 +250,7 @@ export default function ModuleContent({
                                 </Button>
                             </div>
                         ) : (
-                            <QuizInterface quizzes={quizzes} moduleId={moduleId} courseId={courseId} />
+                            <QuizInterface quizzes={quizzes} moduleId={moduleId} courseId={courseId} moduleTitle={moduleTitle} />
                         )}
                     </div>
                 </ScrollArea>
@@ -176,45 +309,38 @@ export default function ModuleContent({
 
                 <Separator className="my-6" />
 
-                {/* Key Concepts (Pedagogical Guidance) */}
-                <div>
-                    <h3 className="font-semibold mb-4 flex items-center gap-2 text-[var(--primary)]">
-                        <BookOpen className="w-4 h-4" /> Key Concepts
-                    </h3>
-                    <div className="space-y-3">
-                        <TooltipProvider>
-                            <div className="flex flex-wrap gap-2">
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="cursor-help px-3 py-1.5 bg-[var(--primary)]/10 text-[var(--primary)] rounded-lg text-xs font-medium border border-[var(--primary)]/20 hover:bg-[var(--primary)]/20 transition-colors">
-                                            Eigenvector
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs bg-[var(--primary)] text-white border-[var(--primary)]">
-                                        <p>A non-zero vector that changes at most by a scalar factor when that linear transformation is applied to it.</p>
-                                    </TooltipContent>
-                                </Tooltip>
-
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="cursor-help px-3 py-1.5 bg-[var(--primary)]/10 text-[var(--primary)] rounded-lg text-xs font-medium border border-[var(--primary)]/20 hover:bg-[var(--primary)]/20 transition-colors">
-                                            Linear Transformation
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs bg-[var(--primary)] text-white border-[var(--primary)]">
-                                        <p>A function between two vector spaces that preserves the operations of vector addition and scalar multiplication.</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </div>
-                        </TooltipProvider>
+                {/* Key Concepts — dynamic per module */}
+                {getKeyConcepts(moduleTitle).length > 0 && (
+                    <div>
+                        <h3 className="font-semibold mb-4 flex items-center gap-2 text-[var(--primary)]">
+                            <BookOpen className="w-4 h-4" /> Key Concepts
+                        </h3>
+                        <div className="space-y-3">
+                            <TooltipProvider>
+                                <div className="flex flex-wrap gap-2">
+                                    {getKeyConcepts(moduleTitle).map(({ term, definition }) => (
+                                        <Tooltip key={term}>
+                                            <TooltipTrigger asChild>
+                                                <div className="cursor-help px-3 py-1.5 bg-[var(--primary)]/10 text-[var(--primary)] rounded-lg text-xs font-medium border border-[var(--primary)]/20 hover:bg-[var(--primary)]/20 transition-colors">
+                                                    {term}
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-xs bg-[var(--primary)] text-white border-[var(--primary)]">
+                                                <p>{definition}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    ))}
+                                </div>
+                            </TooltipProvider>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );
 }
 
-function QuizInterface({ quizzes, moduleId, courseId }: { quizzes: QuizQuestion[]; moduleId: string; courseId: string }) {
+function QuizInterface({ quizzes, moduleId, courseId, moduleTitle }: { quizzes: QuizQuestion[]; moduleId: string; courseId: string; moduleTitle: string }) {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [score, setScore] = useState(0);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -242,9 +368,9 @@ function QuizInterface({ quizzes, moduleId, courseId }: { quizzes: QuizQuestion[
             setIsSubmitted(false);
         } else {
             setIsComplete(true);
-            // Save quiz score
-            const finalScore = selectedOption === question.correctAnswer ? score + 1 : score;
-            saveQuizScore(moduleId, courseId, finalScore, quizzes.length).catch(console.error);
+            // `score` is already updated by handleSubmit via setScore — do NOT add 1 again.
+            // Adding 1 here caused 133% when all answers correct (double-counted last question).
+            saveQuizScore(moduleId, courseId, score, quizzes.length).catch(console.error);
         }
     };
 
@@ -349,15 +475,28 @@ function QuizInterface({ quizzes, moduleId, courseId }: { quizzes: QuizQuestion[
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-[var(--primary)]/5 border border-[var(--primary)]/20 rounded-xl p-4 mb-6"
+                            className={`border rounded-xl p-4 mb-6 ${
+                                selectedOption === question.correctAnswer
+                                    ? "bg-[var(--success)]/5 border-[var(--success)]/20"
+                                    : "bg-red-50 border-red-200"
+                            }`}
                         >
-                            <h4 className="font-semibold text-[var(--primary)] flex items-center gap-2 mb-1">
-                                <BookOpen className="w-4 h-4" />
-                                Why is this correct?
+                            <h4 className={`font-semibold flex items-center gap-2 mb-1 ${
+                                selectedOption === question.correctAnswer
+                                    ? "text-[var(--success)]"
+                                    : "text-red-700"
+                            }`}>
+                                {selectedOption === question.correctAnswer
+                                    ? <><CheckCircle className="w-4 h-4" /> Well done!</>
+                                    : <><XCircle className="w-4 h-4" /> Study tip</>
+                                }
                             </h4>
-                            <p className="text-sm text-[var(--primary)]/80">
-                                This answer is correct because it follows the fundamental theorem of calculus which links the concept of differentiating a function with integrating a function.
-                                {/* In a real app, this explanation would come from the database/AI metadata */}
+                            <p className={`text-sm ${
+                                selectedOption === question.correctAnswer
+                                    ? "text-[var(--success)]/80"
+                                    : "text-red-700/80"
+                            }`}>
+                                {getQuizFeedback(moduleTitle, selectedOption === question.correctAnswer)}
                             </p>
                         </motion.div>
                     )}
