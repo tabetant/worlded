@@ -51,6 +51,7 @@ function deriveCategory(id: string, title: string): DerivedCategory {
     if (/computer|programming|algorithm|software|data.struct|machine.learn|artificial|neural|network|javascript|python|typescript|react/.test(text)) {
         return 'Computer Science';
     }
+    // Default: most seeded courses are math
     return 'Mathematics';
 }
 
@@ -102,6 +103,7 @@ export function CoursesGrid({ courses, enrolledCourseIds }: CoursesGridProps) {
         if (activeCategory !== 'All') {
             result = result.filter(c => c.category === activeCategory);
         }
+
         if (search.trim()) {
             const q = search.toLowerCase();
             result = result.filter(
@@ -110,6 +112,7 @@ export function CoursesGrid({ courses, enrolledCourseIds }: CoursesGridProps) {
                     c.description.toLowerCase().includes(q),
             );
         }
+
         return result;
     }, [enrichedCourses, activeCategory, search]);
 
@@ -191,6 +194,16 @@ export function CoursesGrid({ courses, enrolledCourseIds }: CoursesGridProps) {
                                             {course.category}
                                         </span>
                                         <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${DIFFICULTY_STYLE}`}>
+                                    {/* Badges: category + difficulty */}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span
+                                            className={`text-xs font-medium px-2.5 py-1 rounded-full border ${CATEGORY_STYLES[course.category]}`}
+                                        >
+                                            {course.category}
+                                        </span>
+                                        <span
+                                            className={`text-xs font-medium px-2.5 py-1 rounded-full border ${DIFFICULTY_STYLE}`}
+                                        >
                                             {DIFFICULTY}
                                         </span>
                                     </div>
