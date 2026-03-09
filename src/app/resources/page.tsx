@@ -1,42 +1,51 @@
-import { FileText, Download, Video } from "lucide-react";
+import { redirect } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
+import { db } from '@/db';
+import { resources, courses } from '@/app/db/drizzle/schema';
+import { ResourcesView } from '@/components/resources/ResourcesView';
+import { ResourcesComingSoon } from '@/components/resources/ResourcesComingSoon';
+import type { Resource } from '@/components/resources/ResourcesView';
 
-export default function ResourcesPage() {
-    return (
-        <div className="min-h-screen bg-[var(--background-subtle)]">
-            <div className="container mx-auto px-6 py-8">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-foreground mb-2">Resources</h1>
-                    <p className="text-muted-foreground">Supplemental learning materials</p>
-                </div>
+export const dynamic = 'force-dynamic';
 
-                {/* Coming Soon State */}
-                <div className="bg-white rounded-2xl border border-[var(--border-subtle)] p-12 text-center">
-                    <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-accent/10 to-primary/10 rounded-2xl flex items-center justify-center">
-                        <FileText className="w-10 h-10 text-accent" />
-                    </div>
-                    <h2 className="text-2xl font-semibold text-foreground mb-3">
-                        Resources Coming Soon!
-                    </h2>
-                    <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                        We&apos;re preparing downloadable PDFs, supplemental videos, and study guides for all modules.
-                    </p>
+export default async function ResourcesPage() {
+    const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mt-8">
-                        <div className="p-4 bg-[var(--background-subtle)] rounded-xl">
-                            <FileText className="w-6 h-6 text-accent mx-auto mb-2" />
-                            <p className="text-sm font-medium text-foreground">PDF Downloads</p>
-                        </div>
-                        <div className="p-4 bg-[var(--background-subtle)] rounded-xl">
-                            <Video className="w-6 h-6 text-accent mx-auto mb-2" />
-                            <p className="text-sm font-medium text-foreground">Video Lectures</p>
-                        </div>
-                        <div className="p-4 bg-[var(--background-subtle)] rounded-xl">
-                            <Download className="w-6 h-6 text-accent mx-auto mb-2" />
-                            <p className="text-sm font-medium text-foreground">Study Guides</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+    if (!user) redirect('/auth');
+
+    // Try to fetch resources — table may not exist or may be empty
+    let allResources: typeof resources.$inferSelect[] = [];
+    let hasResources = false;
+
+    try {
+        allResources = await db.select().from(resources);
+        hasResources = allResources.length > 0;
+    } catch {
+        hasResources = false;
+    }
+
+    if (!hasResources) {
+        return <ResourcesComingSoon />;
+    }
+
+    // Fetch course names to label grouped sections
+    const allCourses = await db.select({ id: courses.id, title: courses.title }).from(courses);
+    const courseMap = Object.fromEntries(allCourses.map(c => [c.id, c.title]));
+
+    // Enrich with resolved course name
+    const enriched: Resource[] = allResources.map(r => ({
+        id: r.id,
+        title: r.title,
+        type: r.type,
+        url: r.url,
+        subject: r.subject,
+        contentSummary: r.contentSummary,
+        courseId: r.courseId,
+        courseName: r.courseId ? (courseMap[r.courseId] ?? r.courseId) : null,
+    }));
+
+    return <ResourcesView resources={enriched} />;
 }

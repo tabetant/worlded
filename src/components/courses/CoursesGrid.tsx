@@ -67,9 +67,7 @@ const DIFFICULTY_STYLE = 'bg-amber-100 text-amber-700 border-amber-200';
 const containerVariants = {
     hidden: {},
     visible: {
-        transition: {
-            staggerChildren: 0.07,
-        },
+        transition: { staggerChildren: 0.07 },
     },
 };
 
@@ -102,7 +100,6 @@ export function CoursesGrid({ courses, enrolledCourseIds }: CoursesGridProps) {
 
     const filtered = useMemo(() => {
         let result = enrichedCourses;
-
         if (activeCategory !== 'All') {
             result = result.filter(c => c.category === activeCategory);
         }
@@ -191,6 +188,12 @@ export function CoursesGrid({ courses, enrolledCourseIds }: CoursesGridProps) {
                                         {course.description}
                                     </p>
 
+                                    {/* Badges */}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${CATEGORY_STYLES[course.category]}`}>
+                                            {course.category}
+                                        </span>
+                                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${DIFFICULTY_STYLE}`}>
                                     {/* Badges: category + difficulty */}
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span
