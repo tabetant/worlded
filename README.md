@@ -23,9 +23,9 @@
 ```mermaid
 flowchart LR
   U[Student] --> APP[Next.js App Router]
-  APP -->|@supabase/ssr| AUTH[Supabase Auth]
+  APP -->|"@supabase/ssr"| AUTH[Supabase Auth]
   APP -->|Drizzle ORM| DB[(Postgres on Supabase)]
-  APP -->|Vercel AI SDK| AGENT[Eddi · Gemini]
+  APP -->|Vercel AI SDK| AGENT["Eddi (Gemini)"]
   AGENT -->|tool call| TOOLS[Course tools]
   TOOLS --> DB
   TOOLS --> AGENT
